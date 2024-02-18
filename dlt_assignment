@@ -1,18 +1,67 @@
-Q1 Solution
+# Q1 Solution
 def square_root_generator(limit):
     n = 1
     while n <= limit:
         yield n ** 0.5
         n += 1
-
-# Example usage:
 limit = 5
 generator = square_root_generator(limit)
-
 total =[]
 for sqrt_value in generator:
-
     total.append(sqrt_value)
-    print(sqrt_value)
+print(sum(total))
 
-print("Total",sum(total))
+# Q2 Solution
+def square_root_generator(limit):
+    n = 1
+    last_value = None
+    while n <= limit:
+        last_value = n ** 0.5
+        n += 1
+    return last_value
+limit = 13
+last_sqrt_value = square_root_generator(limit)
+print(last_sqrt_value)
+
+def people_1():
+    for i in range(1, 6):
+        yield {"ID": i, "Name": f"Person_{i}", "Age": 25 + i, "City": "City_A"}
+total_age = []
+for person in people_1():
+    total_age.append(person['Age'])
+    print(person)
+print('Total age for the first generator is:',sum(total_age))
+def people_2():
+    for i in range(3, 9):
+        yield {"ID": i, "Name": f"Person_{i}", "Age": 30 + i, "City": "City_B", "Occupation": f"Job_{i}"}
+total_age2 =[]
+for person in people_2():
+    total_age2.append(person['Age'])
+    print(person)
+print('Total age for the second generator is:',sum(total_age2))
+
+# Q3 Solution
+def people_1():
+    for i in range(1, 6):
+        yield {"ID": i, "Name": f"Person_{i}", "Age": 25 + i, "City": "City_A"}
+def people_2():
+    for i in range(3, 9):
+        yield {"ID": i, "Name": f"Person_{i}", "Age": 30 + i, "City": "City_B", "Occupation": f"Job_{i}"}
+total_age_combined = 0
+for person in people_1():
+    total_age_combined += person['Age']
+    print(person)
+for person in people_2():
+    total_age_combined += person['Age']
+print(total_age_combined)
+
+# Q4 Solution
+import dlt
+generators_pipeline = dlt.pipeline(destination='duckdb', dataset_name='all_customers')
+info = generators_pipeline.run(people_1(),table_name="Customers",primary_key="id",write_disposition="replace")
+generators_pipeline = dlt.pipeline(destination='duckdb', dataset_name='all_customers')
+info = generators_pipeline.run(people_2(),table_name="Customers",write_disposition="merge",primary_key="id")
+conn = duckdb.connect(f"{generators_pipeline.pipeline_name}.duckdb")
+conn.sql(f"SET search_path = '{generators_pipeline.dataset_name}'")
+total_age = conn.sql("SELECT sum(age) FROM Customers").df
+display(total_age)
