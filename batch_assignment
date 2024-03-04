@@ -1,1 +1,22 @@
 
+df_fhv_2019_10 = df_fhv_2019_10.repartition(6)
+df_fhv_2019_10 = df_fhv_2019_10.write.parquet("data/repartitioned/fhv/2019/10/")
+df_fhv_2019_10_rep = spark.read.parquet('data/repartitioned/fhv/2019/10/')
+df_fhv_2019_10_rep.filter(f.to_date(f.col("pickup_datetime"),"yyyy-MM-dd")=="2019-10-15").count()
+df_fhv_2019_10.createOrReplaceTempView('fhv_data')
+result = spark.sql("""
+    SELECT 
+    max((dropOff_datetime - pickup_datetime)*24) AS time_diff
+    FROM fhv_data 
+""").show()
+
+df_tz_lookup.createOrReplaceTempView('lookup_data')
+
+result3 = spark.sql("""
+    SELECT 
+        fhv_data.PUlocationID,lookup_data.Zone,count(fhv_data.PUlocationID)
+    FROM fhv_data
+    LEFT JOIN lookup_data ON fhv_data.PUlocationID = lookup_data.LocationID
+    GROUP BY fhv_data.PUlocationID,lookup_data.Zone
+    ORDER BY count(fhv_data.PUlocationID) asc
+""")
